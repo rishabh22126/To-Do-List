@@ -3,6 +3,8 @@ package com.example.todolistapp
 import android.os.Bundle
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
+import org.json.JSONArray
+import org.json.JSONObject
 
 class MainActivity : AppCompatActivity() {
 
@@ -57,14 +59,37 @@ class MainActivity : AppCompatActivity() {
     private fun saveTasks() {
         val sharedPref = getSharedPreferences("tasks_pref", MODE_PRIVATE)
         val editor = sharedPref.edit()
-        val taskStrings = taskList.map { it.toString() }.toSet()
-        editor.putStringSet("task_set", taskStrings)
+        val jsonArray = JSONArray()
+        for (task in taskList) {
+            val obj = JSONObject()
+            obj.put("name", task.name)
+            obj.put("isDone", task.isDone)
+            jsonArray.put(obj)
+        }
+        editor.putString("tasks_json", jsonArray.toString())
         editor.apply()
     }
 
     // Load tasks from SharedPreferences
     private fun loadTasks(): MutableList<Task> {
         val sharedPref = getSharedPreferences("tasks_pref", MODE_PRIVATE)
+        val jsonString = sharedPref.getString("tasks_json", null)
+        if (!jsonString.isNullOrEmpty()) {
+            return try {
+                val array = JSONArray(jsonString)
+                val list = mutableListOf<Task>()
+                for (i in 0 until array.length()) {
+                    val obj = array.getJSONObject(i)
+                    val name = obj.optString("name", "")
+                    val isDone = obj.optBoolean("isDone", false)
+                    list.add(Task(name, isDone))
+                }
+                list
+            } catch (e: Exception) {
+                mutableListOf()
+            }
+        }
+        // Backward compatibility with old storage (set of strings)
         val taskStrings = sharedPref.getStringSet("task_set", emptySet()) ?: emptySet()
         return taskStrings.map { Task.fromString(it) }.toMutableList()
     }
@@ -73,7 +98,8 @@ class MainActivity : AppCompatActivity() {
     private fun updateTaskCounters() {
         val total = taskList.size
         val completed = taskList.count { it.isDone }
-        textTaskCount.text = "Total Tasks: $total"
+        val notDone = total - completed
         textCompletedCount.text = "Completed: $completed"
+        textTaskCount.text = "Not Done: $notDone"
     }
 }
