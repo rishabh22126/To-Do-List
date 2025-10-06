@@ -73,7 +73,8 @@ class MainActivity : AppCompatActivity() {
     private fun updateTaskCounters() {
         val total = taskList.size
         val completed = taskList.count { it.isDone }
-        textTaskCount.text = "Total Tasks: $total"
-        textCompletedCount.text = "Completed: $completed"
+        // Align counters with UI labels: first shows completed, second shows not done
+        textCompletedCount.text = "No of task Done :- $completed"
+        textTaskCount.text = "No of task Not Done :- ${total - completed}"
     }
 }

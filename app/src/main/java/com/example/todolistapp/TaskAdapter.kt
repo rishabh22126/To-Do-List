@@ -27,10 +27,10 @@ class TaskAdapter(
         val checkBox = view.findViewById<CheckBox>(R.id.checkBoxTask)
 
         taskName.text = task.name
-        checkBox.isChecked = task.isDone
 
-        // Remove previous listener before adding a new one
+        // Remove previous listener before updating state to avoid spurious callbacks
         checkBox.setOnCheckedChangeListener(null)
+        checkBox.isChecked = task.isDone
         checkBox.setOnCheckedChangeListener { _, isChecked ->
             task.isDone = isChecked
             updateCounters()
